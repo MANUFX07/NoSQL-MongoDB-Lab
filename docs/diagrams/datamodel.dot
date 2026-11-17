@@ -1,0 +1,8 @@
+digraph G { rankdir=LR; pad=0.15; node [shape=plaintext fontname="Helvetica" fontsize=10];
+ c [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#2E7D32"><tr><td bgcolor="#2E7D32"><font color="white"><b>document_chunks</b></font></td></tr>
+ <tr><td align="left">_id : ObjectId</td></tr><tr><td align="left">source_title : string</td></tr><tr><td align="left">chunk_index : int</td></tr><tr><td align="left">text : string</td></tr><tr><td align="left">embedding : double[384]</td></tr><tr><td align="left">embedding_backend : string</td></tr><tr><td align="left">created_at : date</td></tr>
+ <tr><td align="left" bgcolor="#EEF7EE"><i>unique (source_title, chunk_index)</i></td></tr><tr><td align="left" bgcolor="#EEF7EE"><i>vectorSearch index on embedding</i></td></tr></table>>];
+ s [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#1F3A5F"><tr><td bgcolor="#1F3A5F"><font color="white"><b>sessions</b></font></td></tr>
+ <tr><td align="left">_id : ObjectId</td></tr><tr><td align="left">session_id : string</td></tr><tr><td align="left">history : [ {role, content, ts,</td></tr><tr><td align="left">   sources[], backend} ]  (≤ 40)</td></tr><tr><td align="left">created_at, updated_at : date</td></tr>
+ <tr><td align="left" bgcolor="#EAF1F8"><i>unique (session_id)</i></td></tr></table>>];
+ s -> c [label=" sources cite\n chunk ids" fontsize=9 style=dashed color="#44546A"]; }

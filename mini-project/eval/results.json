@@ -1,0 +1,20 @@
+[
+  {
+    "backend": "mock",
+    "chunks": 28,
+    "questions": 24,
+    "hit@1": 0.042,
+    "hit@3": 0.375,
+    "mrr": 0.181,
+    "mean_retrieval_ms": 2.65
+  },
+  {
+    "backend": "hash",
+    "chunks": 28,
+    "questions": 24,
+    "hit@1": 0.958,
+    "hit@3": 1.0,
+    "mrr": 0.979,
+    "mean_retrieval_ms": 2.54
+  }
+]

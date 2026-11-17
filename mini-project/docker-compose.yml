@@ -1,0 +1,47 @@
+# Full stack: MongoDB + Ollama (SLM) + FastAPI backend + Streamlit frontend
+#   docker compose up -d --build
+#   docker compose exec ollama ollama pull llama3.2:1b
+#   docker compose exec backend python scripts/ingest.py
+#   open http://localhost:8501
+services:
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: [mongo_data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: [ollama_models:/root/.ollama]
+
+  backend:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: llm_chat_app
+      LLM_BACKEND: ollama
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: llama3.2:1b
+      EMBEDDING_BACKEND: hash
+      VECTOR_SEARCH: local
+      BACKEND_URL: http://localhost:8000
+    depends_on:
+      mongo: {condition: service_healthy}
+      ollama: {condition: service_started}
+
+  frontend:
+    build: .
+    command: streamlit run frontend/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    ports: ["8501:8501"]
+    environment:
+      BACKEND_URL: http://backend:8000   # service name, NOT localhost
+    depends_on: [backend]
+
+volumes:
+  mongo_data:
+  ollama_models:

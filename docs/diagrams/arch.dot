@@ -1,0 +1,19 @@
+digraph G { rankdir=TB; pad=0.2; nodesep=0.5; ranksep=0.45; newrank=true;
+ node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11 color="#1F3A5F" fillcolor="#EAF1F8" penwidth=1.3];
+ edge [fontname="Helvetica" fontsize=9 color="#44546A"];
+ user [label="User (browser)" shape=oval fillcolor="#FFFFFF"];
+ ui [label="Streamlit Chat UI  :8501"];
+ subgraph cluster_api { label="FastAPI backend  :8000"; labeljust=l; fontname="Helvetica-Bold"; fontsize=11; style="rounded,dashed"; color="#1F3A5F";
+   ing [label="POST /ingest\nchunk → embed → upsert"]; chat [label="POST /chat\nretrieve → prompt → generate"];
+   emb [label="Embedding module\nhash | Ollama | mock" fillcolor="#FFF4E0"]; }
+ llm [label="Language model\nSLM via Ollama (Llama 3.2 1B)\nor LLM via OpenAI API" fillcolor="#F3E8F8" color="#6A1B9A"];
+ subgraph cluster_db { label="MongoDB  (database: llm_chat_app)"; labeljust=l; fontname="Helvetica-Bold"; fontsize=11; style="rounded,filled"; fillcolor="#EEF7EE"; color="#2E7D32";
+   chunks [label="document_chunks\ntext + embedding[384]" shape=cylinder fillcolor="#FFFFFF" color="#2E7D32"];
+   vidx [label="Vector index\n$vectorSearch (HNSW) / cosine" fillcolor="#FFFFFF" color="#2E7D32"];
+   sess [label="sessions\ncapped chat history" shape=cylinder fillcolor="#FFFFFF" color="#2E7D32"]; }
+ user -> ui; ui -> ing [style=dashed label=" documents"]; ui -> chat [label=" question"];
+ ing -> emb; emb -> chat [dir=back]; {rank=same; ing; emb; chat;}
+ ing -> chunks [label=" upsert"]; chunks -> vidx [dir=none style=dotted];
+ chat -> vidx [label=" top-k"]; chat -> sess [label=" read / $push"];
+ chat -> llm [label=" grounded prompt"]; llm -> chat [label=" answer"]; {rank=same; chunks; vidx; sess; llm;}
+}

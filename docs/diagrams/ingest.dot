@@ -1,0 +1,7 @@
+digraph G { rankdir=TB; pad=0.15; nodesep=0.45; ranksep=0.5; newrank=true;
+ node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=12 fillcolor="#EAF1F8" color="#1F3A5F" width=2.0 height=0.7]; edge [color="#44546A"];
+ a [label="Source documents\n{title, content}" shape=note fillcolor="#FFFFFF"]; b [label="Word chunking\n120 words, 20 overlap"];
+ c [label="Tokenise\nunigrams + bigrams"]; d [label="Feature hashing\n384-d, signed, log-TF"]; e [label="L2 normalise\n(unit vector)"];
+ f [label="Upsert keyed on\n(source_title, chunk_index)" fillcolor="#EEF7EE" color="#2E7D32"]; g [label="document_chunks" shape=cylinder fillcolor="#FFFFFF" color="#2E7D32"];
+ {rank=same; a; b; c; d;} {rank=same; g; f; e;}
+ a->b->c->d; d->e; f->e [dir=back]; g->f [dir=back]; }

@@ -1,0 +1,9 @@
+digraph G { rankdir=TB; pad=0.15; nodesep=0.25; ranksep=0.28; node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11 fillcolor="#EAF1F8" color="#1F3A5F" width=3.4]; edge [color="#44546A"];
+ q [label="1. User question + session_id" shape=oval fillcolor="#FFFFFF"]; e [label="2. Embed question (same embedder as ingest)"];
+ r [label="3. Retrieve top-k chunks by cosine similarity\n($vectorSearch on Atlas, brute force locally)" fillcolor="#EEF7EE" color="#2E7D32"];
+ h [label="4. Load last 4 turns from sessions" fillcolor="#EEF7EE" color="#2E7D32"];
+ p [label="5. Build prompt: system rules + numbered passages\n+ history + question"];
+ g [label="6. Generate with SLM / LLM\n(fallback: extractive answer)" fillcolor="#F3E8F8" color="#6A1B9A"];
+ s [label="7. $push user + assistant turns ($slice −40)" fillcolor="#EEF7EE" color="#2E7D32"];
+ o [label="8. Return answer, sources, latency" shape=oval fillcolor="#FFFFFF"];
+ q->e->r->p; q->h->p; p->g->s->o; }
