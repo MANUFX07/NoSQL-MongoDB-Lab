@@ -30,20 +30,25 @@ MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "512"))
 SYSTEM_PROMPT = (
     "You are a teaching assistant for a NoSQL / MongoDB course. "
     "Answer ONLY from the numbered context passages. Cite passages like [1], [2]. "
-    "If the context does not contain the answer, say you don't know."
+    "If the context does not contain the answer, say you don't know. "
+    "When LIVE DASHBOARD DATA is given, use those numbers to explain the user's own MongoDB server."
 )
 
 
-def build_prompt(question: str, sources: list[dict]) -> str:
+def build_prompt(question: str, sources: list[dict], live: str | None = None) -> str:
     ctx = "\n".join(f"[{i}] ({s['source']}) {s['text']}" for i, s in enumerate(sources, 1))
-    return f"Context:\n{ctx or '(no passages retrieved)'}\n\nQuestion: {question}\nAnswer:"
+    live_block = f"LIVE DASHBOARD DATA (current readings from the user's MongoDB):\n{live}\n\n" if live else ""
+    return f"{live_block}Context:\n{ctx or '(no passages retrieved)'}\n\nQuestion: {question}\nAnswer:"
 
 
-def _extractive(question: str, sources: list[dict]) -> str:
+def _extractive(question: str, sources: list[dict], live: str | None = None) -> str:
     if not sources:
         return "I don't know - no relevant passages are stored yet. Ingest documents first."
     top = sources[0]
-    return f"{top['text']} [1]"
+    answer = f"{top['text']} [1]"
+    if live:
+        answer += "\n\nYour current readings:\n" + live
+    return answer
 
 
 def _ollama(messages: list[dict]) -> str:
@@ -72,16 +77,16 @@ def _openai(messages: list[dict]) -> str:
     return resp.choices[0].message.content
 
 
-def generate(question: str, sources: list[dict], history: list[dict]) -> tuple[str, str]:
-    """Return (answer, backend_actually_used)."""
+def generate(question: str, sources: list[dict], history: list[dict], live: str | None = None) -> tuple[str, str]:
+    """Return (answer, backend_actually_used). `live` = optional dashboard metrics for this question."""
     if LLM_BACKEND == "extractive":
-        return _extractive(question, sources), "extractive"
+        return _extractive(question, sources, live), "extractive"
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, *history,
-                {"role": "user", "content": build_prompt(question, sources)}]
+                {"role": "user", "content": build_prompt(question, sources, live)}]
     try:
         if LLM_BACKEND == "openai" and OPENAI_API_KEY:
             return _openai(messages), f"openai:{OPENAI_MODEL}"
         return _ollama(messages), f"ollama:{OLLAMA_MODEL}"
     except Exception as exc:  # model down -> still answer from retrieved text
         logger.warning("LLM call failed (%s); falling back to extractive answer", exc)
-        return _extractive(question, sources), "extractive-fallback"
+        return _extractive(question, sources, live), "extractive-fallback"

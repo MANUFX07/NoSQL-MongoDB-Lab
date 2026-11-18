@@ -26,7 +26,7 @@ This repository has everything for the MongoDB Lab: the code for all 18 lab expe
 ├── setup/                     Environment setup notes
 ├── mini-project/              Mini project: LLM/SLM RAG chat application on MongoDB
 │   ├── app/                   FastAPI backend (chat_api.py, embeddings.py, llm.py)
-│   ├── frontend/              Streamlit chat UI
+│   ├── frontend/              Streamlit chat UI + operations dashboard (Ch 7 + 14) with AI chat box
 │   ├── data/                  Knowledge base + 24 labelled evaluation questions
 │   ├── eval/                  Retrieval quality and scaling evaluations (+ results JSON)
 │   ├── tests/                 pytest end-to-end tests (mongomock, no server needed)
@@ -82,7 +82,8 @@ cd mini-project
 docker compose up -d --build
 docker compose exec ollama ollama pull llama3.2:1b
 docker compose exec backend python scripts/ingest.py
-# open http://localhost:8501
+# open http://localhost:8501   (chat)
+# open http://localhost:8502   (Chapter 7 + 14 operations dashboard with the AI chat box)
 ```
 
 Without Docker: `pip install -r requirements.txt`, start MongoDB and Ollama, then run `uvicorn app.chat_api:app --reload`, `python scripts/ingest.py` and `streamlit run frontend/streamlit_app.py`.
@@ -91,7 +92,7 @@ Tests and evaluation (no MongoDB server needed):
 
 ```bash
 cd mini-project
-pytest -q                          # 7 passed
+pytest -q                          # 14 passed
 python -m eval.retrieval_eval      # Hit@1 / Hit@3 / MRR per embedding backend
 python -m eval.scaling_eval        # retrieval latency vs corpus size
 ```

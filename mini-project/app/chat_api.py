@@ -70,6 +70,8 @@ class ChatRequest(BaseModel):
     session_id: str = Field(min_length=1)
     message: str = Field(min_length=1)
     top_k: int = Field(default=TOP_K, ge=1, le=10)
+    context: Optional[str] = Field(default=None, max_length=4000,
+                                   description="Live dashboard readings to ground the answer in the user's own server")
 
 
 class ChatResponse(BaseModel):
@@ -156,7 +158,7 @@ def health():
     except Exception:
         mongo = "disconnected"
     return {"status": "ok" if mongo == "connected" else "degraded", "mongo": mongo,
-            "llm_backend": llm.LLM_BACKEND, "model": llm.OLLAMA_MODEL if llm.LLM_BACKEND == "ollama" else llm.OPENAI_MODEL,
+            "llm_backend": llm.LLM_BACKEND, "model": {"ollama": llm.OLLAMA_MODEL, "openai": llm.OPENAI_MODEL}.get(llm.LLM_BACKEND, "no model (extractive)"),
             "embedding_backend": embeddings.BACKEND, "vector_search": VECTOR_SEARCH}
 
 
@@ -192,7 +194,7 @@ def chat(req: ChatRequest):
     history = (session or {}).get("history", [])[-HISTORY_TURNS_IN_PROMPT * 2:]
     history = [{"role": m["role"], "content": m["content"]} for m in history]
 
-    answer, used = llm.generate(req.message, sources, history)
+    answer, used = llm.generate(req.message, sources, history, req.context)
 
     now = datetime.now(timezone.utc)
     db().sessions.update_one(

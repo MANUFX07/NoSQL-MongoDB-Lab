@@ -6,7 +6,7 @@
     "hit@1": 0.042,
     "hit@3": 0.375,
     "mrr": 0.181,
-    "mean_retrieval_ms": 2.65
+    "mean_retrieval_ms": 1.8
   },
   {
     "backend": "hash",
@@ -15,6 +15,6 @@
     "hit@1": 0.958,
     "hit@3": 1.0,
     "mrr": 0.979,
-    "mean_retrieval_ms": 2.54
+    "mean_retrieval_ms": 1.77
   }
 ]

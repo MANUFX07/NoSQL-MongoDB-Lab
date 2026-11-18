@@ -2,7 +2,7 @@
 #   docker compose up -d --build
 #   docker compose exec ollama ollama pull llama3.2:1b
 #   docker compose exec backend python scripts/ingest.py
-#   open http://localhost:8501
+#   open http://localhost:8501   (chat)   or   http://localhost:8502   (dashboard + AI chat)
 services:
   mongo:
     image: mongo:7
@@ -41,6 +41,18 @@ services:
     environment:
       BACKEND_URL: http://backend:8000   # service name, NOT localhost
     depends_on: [backend]
+
+  dashboard:                             # Chapter 7 + 14 operations dashboard with the AI chat box
+    build: .
+    command: streamlit run frontend/dashboard_app.py --server.port 8502 --server.address 0.0.0.0
+    ports: ["8502:8502"]
+    environment:
+      DASHBOARD_MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: llm_chat_app
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      mongo: {condition: service_healthy}
+      backend: {condition: service_started}
 
 volumes:
   mongo_data:
