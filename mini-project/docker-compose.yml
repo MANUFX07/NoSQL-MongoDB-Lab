@@ -1,6 +1,10 @@
-# Full stack: MongoDB + Ollama (SLM) + FastAPI backend + Streamlit frontend
-#   docker compose up -d --build
-#   docker compose exec ollama ollama pull llama3.2:1b
+# MongoDB + FastAPI backend + Streamlit chat + dashboard. The language model is chosen in .env / environment:
+#   A) Ollama installed on Windows/macOS (default):  ollama pull llama3.2:1b   then   docker compose up -d --build
+#   B) Ollama in Docker (~4 GB image):  OLLAMA_BASE_URL=http://ollama:11434 docker compose --profile docker-ollama up -d --build
+#                                        docker compose exec ollama ollama pull llama3.2:1b
+#   C) Hosted LLM (OpenAI or any OpenAI-compatible API): LLM_BACKEND=openai OPENAI_API_KEY=... [OPENAI_BASE_URL=...]
+#   D) No model at all: LLM_BACKEND=extractive  (answers with the retrieved passage)
+#   If the model is unreachable the app automatically falls back to D, so it always answers.
 #   docker compose exec backend python scripts/ingest.py
 #   open http://localhost:8501   (chat)   or   http://localhost:8502   (dashboard + AI chat)
 services:
@@ -13,7 +17,8 @@ services:
       interval: 10s
       retries: 5
 
-  ollama:
+  ollama:                                # only with --profile docker-ollama (large image)
+    profiles: ["docker-ollama"]
     image: ollama/ollama:latest
     ports: ["11434:11434"]
     volumes: [ollama_models:/root/.ollama]
@@ -24,15 +29,18 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: llm_chat_app
-      LLM_BACKEND: ollama
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: llama3.2:1b
+      LLM_BACKEND: ${LLM_BACKEND:-ollama}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
       EMBEDDING_BACKEND: hash
       VECTOR_SEARCH: local
       BACKEND_URL: http://localhost:8000
+    extra_hosts: ["host.docker.internal:host-gateway"]   # reach Ollama running on the host
     depends_on:
       mongo: {condition: service_healthy}
-      ollama: {condition: service_started}
 
   frontend:
     build: .

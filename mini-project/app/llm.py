@@ -24,6 +24,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL") or None   # any OpenAI-compatible provider
 TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "512"))
 
@@ -71,7 +72,7 @@ def _ollama(messages: list[dict]) -> str:
 def _openai(messages: list[dict]) -> str:
     from openai import OpenAI
 
-    resp = OpenAI(api_key=OPENAI_API_KEY).chat.completions.create(
+    resp = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL).chat.completions.create(
         model=OPENAI_MODEL, messages=messages, max_tokens=MAX_TOKENS, temperature=TEMPERATURE
     )
     return resp.choices[0].message.content
